@@ -1,0 +1,17 @@
+import org.wenxueliu.fileiterator
+ 
+//这个类提供了文本文件的包装器，在遍历它的时候，它可以列出文件中的每一行
+ 
+public class TextFile implements Iterable<String> {
+ 
+    private String filename;
+    public TextFile(String filename) {
+        this.filename = filename;
+    }
+    // one method of the Iterable interface
+    @Override
+    public Iterator<String> iterator() {
+        return new TextFileIterator(filename);
+    }
+     
+}
