@@ -17,6 +17,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.HttpEntity;
@@ -27,6 +28,9 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.entity.ContentType;
 
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+
+
 /*
  * demo for apache httpclient
  */
@@ -36,7 +40,12 @@ public class Client {
     CloseableHttpClient httpClient;
 
     public Client() {
-        this.httpClient = HttpClients.createDefault();
+        PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
+        cm.setMaxTotal(100);
+
+        this.httpClient = HttpClients.custom()
+                .setConnectionManager(cm)
+                .build();
     }
 
     public HttpEntity get(String url, String path) {
@@ -169,10 +178,32 @@ public class Client {
                 System.out.println(EntityUtils.toString(entity, charset));
                 EntityUtils.consume(s);
             }
-            //List <NameValuePair> nvps = new ArrayList <NameValuePair>();
-            //nvps.add(new BasicNameValuePair("username", "vip"));
-            //nvps.add(new BasicNameValuePair("password", "secret"));
-            //httpPost.setEntity(new UrlEncodedFormEntity(nvps));
+        } catch (UnsupportedEncodingException e) {
+            System.out.println(e.getMessage());
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            if (res != null) {
+                try {
+                    res.close();
+                } catch (IOException e) {
+                }
+            }
+        }
+    }
+
+    public void delete(String url, String path) {
+        CloseableHttpResponse res = null;
+        try {
+            HttpDelete httpDelete = new HttpDelete(url + path);
+
+            res = httpClient.execute(httpDelete);
+            if (res.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+                HttpEntity entity = res.getEntity();
+                Charset charset = ContentType.getOrDefault(entity).getCharset();
+                System.out.println(EntityUtils.toString(entity, charset));
+                EntityUtils.consume(entity);
+            }
         } catch (UnsupportedEncodingException e) {
             System.out.println(e.getMessage());
         } catch (IOException e) {
@@ -206,7 +237,9 @@ public class Client {
 
     public void testJson() {
         System.out.println(genJsonClusterId("1234"));
-        put("http://127.0.0.1:8080/", "vm/lb/cluster/json", genJsonClusterId("1234"));
-        get("http://127.0.0.1:8080/", "vm/lb/cluster/json");
+        put("http://127.0.0.1:8080/", "wm/cluster/self", genJsonClusterId("1234"));
+        get("http://127.0.0.1:8080/", "wm/lb/cluster/json");
+        delete("http://127.0.0.1:8080/", "wm/lb/cluster/json");
+        get("http://127.0.0.1:8080/", "wm/lb/cluster/json");
     }
 }
