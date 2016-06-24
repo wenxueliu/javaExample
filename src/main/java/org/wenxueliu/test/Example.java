@@ -34,6 +34,7 @@ import org.wenxueliu.concurrent.MyThreadLocal;
 import org.wenxueliu.concurrent.MyThreadLocalError;
 import org.wenxueliu.concurrent.MyThreadLocalPlus;
 import org.wenxueliu.concurrent.BenchTest;
+import org.wenxueliu.concurrent.ExecutorsTest;
 import org.wenxueliu.demotask.DemoExecutor;
 import org.wenxueliu.classloader.MyClassLoader;
 import org.wenxueliu.pdfbox.PDFEditor;
@@ -66,6 +67,15 @@ public class Example {
         for (String str : list) {
             System.out.println(str);
         }
+    }
+
+    void testExecutors() {
+        ExecutorsTest e = new ExecutorsTest();
+        e.test();
+        e.testCallable();
+        e.testInvorkAll();
+        e.testInvorkAny();
+        e.testSchedule();
     }
 
     void testSystemCopyOf() {
@@ -699,7 +709,8 @@ public class Example {
         //e.testZKMap();
         //e.testSystemCopyOf();
         //e.testForIn();
-        e.testHttp();
+        //e.testHttp();
+        e.testExecutors();
 	}
 
     public void testHttp() {
