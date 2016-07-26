@@ -42,6 +42,8 @@ import org.wenxueliu.sizeof.ObjectSize;
 import org.wenxueliu.zookeeper.ZKMap;
 import org.wenxueliu.dery.DatabaseManager;
 import org.wenxueliu.http.Client;
+import org.wenxueliu.util.CmdLineExector;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +62,10 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
 public class Example {
 
     private static Logger logger = LoggerFactory.getLogger(Example.class);
+
+    void testCmdLineExecutor() {
+        CmdLineExector.test();
+    }
 
     void testForIn() {
         System.out.println("test for in of null");
@@ -710,7 +716,8 @@ public class Example {
         //e.testSystemCopyOf();
         //e.testForIn();
         //e.testHttp();
-        e.testExecutors();
+        //e.testExecutors();
+        e.testCmdLineExecutor();
 	}
 
     public void testHttp() {
