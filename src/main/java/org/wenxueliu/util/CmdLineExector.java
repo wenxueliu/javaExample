@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.BufferedOutputStream;
 
 import org.apache.commons.exec.Executor;
@@ -65,7 +66,6 @@ public class CmdLineExector {
     private String cmdString;
     private long timeoutMs = ExecuteWatchdog.INFINITE_TIMEOUT;
 
-    boolean sudo = false;
     String passwd = null;
 
     private CmdLineExector() {
@@ -75,7 +75,7 @@ public class CmdLineExector {
      * -1 : cmdLine is null or empty space
      *
      * TODO
-     * inputStream : such as run cmd with sudo
+     * inputStream : such as run cmd with interactive, such as sudo
      */
     public DefaultExecuteResultHandler Async() {
 
@@ -83,7 +83,8 @@ public class CmdLineExector {
 
         this.watchdog = new ExecuteWatchdog(this.timeoutMs);
 
-        if (this.sudo) {
+        if (this.inputStream != null) {
+            LOG.debug("inputStream isn't null");
             this.streamHandler = new PumpStreamHandler(this.outputStream, this.errStream, this.inputStream);
         } else {
             this.streamHandler = new PumpStreamHandler(this.outputStream, this.errStream);
@@ -132,7 +133,8 @@ public class CmdLineExector {
 
         this.watchdog = new ExecuteWatchdog(this.timeoutMs);
 
-        if (this.sudo) {
+        if (this.inputStream != null) {
+            LOG.debug("inputStream isn't null");
             streamHandler = new PumpStreamHandler(this.outputStream, this.errStream, this.inputStream);
         } else {
             streamHandler = new PumpStreamHandler(this.outputStream, this.errStream);
@@ -149,11 +151,6 @@ public class CmdLineExector {
         executor.setStreamHandler(streamHandler);
         executor.setProcessDestroyer(processHandler);
 
-        final Thread outputThread = new Thread(new LogOutStream(resultHandler), "cmdLine process output handler");
-        final Thread errThread = new Thread(new LogOutStream(resultHandler), "cmdLine process error handler");
-        outputThread.start();
-        errThread.start();
-
         try {
             executor.execute(cmdLine, resultHandler);
         } catch (ExecuteException e) {
@@ -164,6 +161,10 @@ public class CmdLineExector {
             e.printStackTrace();
         }
 
+        final Thread outputThread = new Thread(new LogOutStream(resultHandler), "cmdLine process output handler");
+        final Thread errThread = new Thread(new LogOutStream(resultHandler), "cmdLine process error handler");
+        outputThread.start();
+        errThread.start();
         try {
             if (this.timeoutMs != 0) {
                 resultHandler.waitFor(this.timeoutMs);
@@ -229,9 +230,19 @@ public class CmdLineExector {
                 } catch (InterruptedException e) {
                     LOG.error("the wait for by interrupted");
                 }
+                if (!outputBuffer.toString().isEmpty()) {
+                    LOG.debug("the output of {} is : {}", cmdString, outputBuffer.toString());
+                }
+                if (!errBuffer.toString().isEmpty()) {
+                    LOG.debug("the error of {} is : {}", cmdString, errBuffer.toString());
+                }
             }
-            LOG.debug("the output of {} is {}", cmdString, outputBuffer.toString());
-            LOG.debug("the error of {} is {}", cmdString, errBuffer.toString());
+            if (!outputBuffer.toString().isEmpty()) {
+                LOG.debug("the output of {} is : {}", cmdString, outputBuffer.toString());
+            }
+            if (!errBuffer.toString().isEmpty()) {
+                LOG.debug("the error of {} is : {}", cmdString, errBuffer.toString());
+            }
         }
     }
 
@@ -248,9 +259,9 @@ public class CmdLineExector {
             return this;
         }
 
-        public CmdLineExectorBuilder withSudo(String passwd) {
-            this.executor.sudo = true;
+        public CmdLineExectorBuilder withPasswd(String passwd) {
             this.executor.passwd = passwd;
+            this.executor.inputStream = new ByteArrayInputStream(passwd.getBytes());
             return this;
         }
 
@@ -297,6 +308,10 @@ public class CmdLineExector {
                 LOG.error("the workdirector is illegal, set as defautl current directory");
                 this.executor.executor.setWorkingDirectory(new File("."));
             }
+
+            if (this.executor.passwd != null && this.executor.inputStream == null) {
+                LOG.error("the passwd is given, but inputStream disable, ignore passwd, or enable inputStream");
+            }
         }
 
         public CmdLineExector build() {
@@ -305,8 +320,18 @@ public class CmdLineExector {
         }
     }
 
+    private void doSleep(long millis)
+    {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            // ignore
+        }
+    }
+
     public static void test() {
-        DefaultExecuteResultHandler result = new CmdLineExectorBuilder().withCmdStr("ls /").withTimeout(5000).build().Async();
+        String cmd = "ls /";
+        DefaultExecuteResultHandler result = new CmdLineExectorBuilder().withCmdStr(cmd).withTimeout(5000).build().Async();
         while(!result.hasResult()) {
             try {
                 result.waitFor(500); //ms
@@ -315,10 +340,27 @@ public class CmdLineExector {
             }
         }
         int ret = result.getExitValue();
-        LOG.info("exec ls / : the ret is {}", ret);
+        LOG.info("exec {} : the ret is {}", cmd, ret);
 
 
-        ret = new CmdLineExectorBuilder().withCmdStr("ls /").withTimeout(5000).build().Sync();
-        LOG.info("exec ls / : the ret is {}", ret);
+        ret = new CmdLineExectorBuilder().withCmdStr(cmd).withTimeout(5000).build().Sync();
+        LOG.info("exec {} : the ret is {}", cmd, ret);
+
+        testSudo();
+    }
+
+    private static void testSudo() {
+        String cmd = "sudo ovs-vsctl show";
+        //DefaultExecuteResultHandler result = new CmdLineExectorBuilder().withCmdStr(cmd).withPasswd("10124").withInputStream(System.in).withTimeout(5000).build().Async();
+        DefaultExecuteResultHandler result = new CmdLineExectorBuilder().withCmdStr(cmd).withPasswd("10124").withTimeout(5000).build().Async();
+        while(!result.hasResult()) {
+            try {
+                result.waitFor(500); //ms
+            } catch (InterruptedException e) {
+                LOG.error("the wait for by interrupted");
+            }
+        }
+        int ret = result.getExitValue();
+        LOG.info("exec {} show : the ret is {}", cmd, ret);
     }
 }
