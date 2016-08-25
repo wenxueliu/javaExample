@@ -350,7 +350,16 @@ public class CmdLineExector {
     }
 
     private static void testSudo() {
-        String cmd = "sudo ovs-vsctl show";
+        String cmd = "sudo ovs-ofctl add-flow a5 \"table=0, priority=1, actions=drop\" -O OpenFlow13";
+        System.out.println("cmd : " + cmd);
+        for (String arg : CommandLine.parse(cmd).toStrings()) {
+            System.out.println("arg : " + arg);
+        }
+        CommandLine cmd_args = new CommandLine("sudo ovs-ofctl").addArguments("add-flow a5", false).addArguments("\"table=0, priority=1, actions=drop\"", true).addArguments("-O OpenFlow13", false);
+        for (String arg : cmd_args.getArguments()) {
+            System.out.println("arg : " + arg);
+        }
+        //String cmd = "sudo ovs-ofctl dump-flows a5 -O OpenFlow13";
         //DefaultExecuteResultHandler result = new CmdLineExectorBuilder().withCmdStr(cmd).withPasswd("10124").withInputStream(System.in).withTimeout(5000).build().Async();
         DefaultExecuteResultHandler result = new CmdLineExectorBuilder().withCmdStr(cmd).withPasswd("10124").withTimeout(5000).build().Async();
         while(!result.hasResult()) {
@@ -362,5 +371,21 @@ public class CmdLineExector {
         }
         int ret = result.getExitValue();
         LOG.info("exec {} show : the ret is {}", cmd, ret);
+
+        try {
+            //Process p = Runtime.getRuntime().exec(new String[] {"sudo", "ovs-ofctl", "add-flow", "a5", "table=0, priority=1, actions=drop", "-O", "OpenFlow13" });
+            Process p = Runtime.getRuntime().exec(CommandLine.parse(cmd).toStrings());
+            p.waitFor();
+            System.out.println("exec " + cmd + " with exit " + p.exitValue());
+            InputStream err = p.getErrorStream();
+            byte [] errBuffer = new byte[100];
+            while(err.read(errBuffer) != -1) {
+                System.out.println(new String(errBuffer));
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
