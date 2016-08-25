@@ -1,15 +1,18 @@
 package org.wenxueliu.serializer;
 
+import java.io.IOException;
+
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 public class JacksonTreeModel {
 
-    String jsonBody =
+    static String jsonBody =
         new StringBuilder("{")
           .append("\"id\":1,")
           .append("\"name\": {")
@@ -22,7 +25,7 @@ public class JacksonTreeModel {
           .append("]")
           .append("}").toString();
 
-    String jsonArray =
+    static String jsonArray =
         new StringBuilder("[{")
           .append("\"id\":1,")
           .append("\"name\": {")
@@ -93,12 +96,15 @@ public class JacksonTreeModel {
                 	System.out.println("ref : " + ref);
                 }
             }
-        } catch (JsonGenerationException e) {
-        	e.printStackTrace();
-        } catch (JsonMappingException e) {
-        	e.printStackTrace();
-        } catch (IOException e) {
-        	e.printStackTrace();
+        //} catch (JsonGenerationException e) {
+        //	e.printStackTrace();
+        //} catch (JsonMappingException e) {
+        //	e.printStackTrace();
+        //} catch (IOException e) {
+        //	e.printStackTrace();
+        //}
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -113,6 +119,7 @@ public class JacksonTreeModel {
             ((ObjectNode) nameNode).put("nickname", "mkyong");
             ((ObjectNode) nameNode).remove("last");
 
+            ObjectMapper mapper = new ObjectMapper();
             ObjectNode positionNode = mapper.createObjectNode();
             positionNode.put("name", "Developer");
             positionNode.put("years", 10);
@@ -139,29 +146,35 @@ public class JacksonTreeModel {
             String resultUpdate = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(root);
             System.out.println("After Update " + resultUpdate);
 
-        } catch (JsonGenerationException e) {
-        	e.printStackTrace();
-        } catch (JsonMappingException e) {
-        	e.printStackTrace();
+        //} catch (JsonGenerationException e) {
+        //	e.printStackTrace();
+        //} catch (JsonMappingException e) {
+        //	e.printStackTrace();
         } catch (IOException e) {
         	e.printStackTrace();
         }
     }
 
     public static void test() {
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode root = mapper.readTree(jsonBody);
-        parseJsonObject(root);
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(jsonBody);
+            parseJsonObject(root);
 
-        JsonNode rootArray = mapper.readTree(jsonArray);
-        parseJsonArray(rootArray);
+            JsonNode rootArray = mapper.readTree(jsonArray);
+            parseJsonArray(rootArray);
 
-        String resultOriginal = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(root);
-        System.out.println("Before Update " + resultOriginal);
-        crudJsonObject(root);
+            String resultOriginal = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(root);
+            System.out.println("Before Update " + resultOriginal);
+            crudJsonObject(root);
+        } catch (IOException e) {
+            e.printStackTrace();
+        //} catch (JsonProcessingException e) {
+        //    e.printStackTrace();
+        }
     }
 
 	public static void main(String[] args) {
-        test();
+        JacksonTreeModel.test();
 	}
 }
