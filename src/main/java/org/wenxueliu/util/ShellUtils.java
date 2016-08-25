@@ -3,7 +3,7 @@ package org.wenxueliu.util;
 /*
  * Frome zstack.org
  */
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang3.time.StopWatch;
 
 import java.io.*;
 import java.lang.reflect.Field;
@@ -107,7 +107,7 @@ public class ShellUtils {
         private boolean withSudo = true;
 
         public void terminate() {
-            DebugUtils.Assert(process!=null, String.format("you can only can call terminate() after calling run()"));
+            //DebugUtils.Assert(process!=null, String.format("you can only can call terminate() after calling run()"));
             process.destroy();
         }
 
