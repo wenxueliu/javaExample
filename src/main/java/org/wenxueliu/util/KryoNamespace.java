@@ -128,7 +128,7 @@ public final class KryoNamespace implements KryoFactory, KryoPool {
                     if (log.isWarnEnabled()) {
                         log.warn("requested nextId {} could potentially overlap " +
                                  "with existing registrations {}+{} ",
-                                 id, blockHeadId, types.size(), new RuntimeException());
+                                 new Object[] {id, blockHeadId, types.size(), new RuntimeException()});
                     }
                 }
                 blocks.add(new RegistrationBlock(this.blockHeadId, types));
@@ -445,7 +445,7 @@ public final class KryoNamespace implements KryoFactory, KryoPool {
         if (existing != null) {
             if (existing.getType() != type) {
                 log.error("{}: Failed to register {} as {}, {} was already registered.",
-                          friendlyName(), type, id, existing.getType());
+                          new Object[] {friendlyName(), type, id, existing.getType()});
 
                 throw new IllegalStateException(String.format(
                           "Failed to register %s as %s, %s was already registered.",
@@ -463,7 +463,7 @@ public final class KryoNamespace implements KryoFactory, KryoPool {
         }
         if (r.getId() != id) {
             log.warn("{}: {} already registed as {}. Skipping {}.",
-                     friendlyName(), r.getType(), r.getId(), id);
+                     new Object[] {friendlyName(), r.getType(), r.getId(), id});
         }
         log.trace("{} registered as {}", r.getType(), r.getId());
     }
