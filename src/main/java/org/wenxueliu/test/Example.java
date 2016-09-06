@@ -715,9 +715,9 @@ public class Example {
         //e.testZKMap();
         //e.testSystemCopyOf();
         //e.testForIn();
-        //e.testHttp();
+        e.testHttp();
         //e.testExecutors();
-        e.testCmdLineExecutor();
+        //e.testCmdLineExecutor();
 	}
 
     public void testHttp() {
