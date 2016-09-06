@@ -350,13 +350,10 @@ public class CmdLineExector {
     }
 
     private static void testSudo() {
-        String cmd = "sudo ovs-ofctl add-flow a5 \"table=0, priority=1, actions=drop\" -O OpenFlow13";
+        //String cmd = "sudo ovs-ofctl add-flow a5 \"table=0, priority=1, actions=drop\" -O OpenFlow13";
+        String cmd = "bash -c \"ls / \"";
         System.out.println("cmd : " + cmd);
         for (String arg : CommandLine.parse(cmd).toStrings()) {
-            System.out.println("arg : " + arg);
-        }
-        CommandLine cmd_args = new CommandLine("sudo ovs-ofctl").addArguments("add-flow a5", false).addArguments("\"table=0, priority=1, actions=drop\"", true).addArguments("-O OpenFlow13", false);
-        for (String arg : cmd_args.getArguments()) {
             System.out.println("arg : " + arg);
         }
         //String cmd = "sudo ovs-ofctl dump-flows a5 -O OpenFlow13";
