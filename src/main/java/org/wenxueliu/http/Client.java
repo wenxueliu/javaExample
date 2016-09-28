@@ -269,7 +269,7 @@ public class Client {
         return toRetBody(res);
     }
 
-    private RetBody toRetBody(String body) {
+    private RetBody toRetBody(String res) {
         ObjectMapper mapper = new ObjectMapper();
         RetBody item = new RetBody();
 
