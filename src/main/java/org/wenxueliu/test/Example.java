@@ -715,10 +715,31 @@ public class Example {
         //e.testZKMap();
         //e.testSystemCopyOf();
         //e.testForIn();
-        e.testHttp();
+        //e.testHttp();
         //e.testExecutors();
         //e.testCmdLineExecutor();
+        e.testString();
 	}
+
+    public void testString() {
+        System.out.println("get mac " + getPseudoMacAddress("10.9.1.106"));
+    }
+
+    public String getPseudoMacAddress(String ipStr) {
+        String []ipArray = ipStr.split("\\.");
+        System.out.println("get mac " + ipArray[0]);
+        System.out.println("get mac " + ipArray[1]);
+        System.out.println("get mac " + ipArray[2]);
+        System.out.println("get mac " + ipArray[3]);
+        String macStr = new StringBuilder(18)
+            .append("42:35:")
+            .append(String.format("%02x", Integer.valueOf(ipArray[0]))).append(":")
+            .append(String.format("%02x", Integer.valueOf(ipArray[1]))).append(":")
+            .append(String.format("%02x", Integer.valueOf(ipArray[2]))).append(":")
+            .append(String.format("%02x", Integer.valueOf(ipArray[3])))
+            .toString();
+        return macStr;
+    }
 
     public void testHttp() {
         new Client().testJson();
