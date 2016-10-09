@@ -43,6 +43,7 @@ import org.wenxueliu.zookeeper.ZKMap;
 import org.wenxueliu.dery.DatabaseManager;
 import org.wenxueliu.http.Client;
 import org.wenxueliu.util.CmdLineExector;
+import org.wenxueliu.io.NIOScatteringandGathering;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -676,6 +677,10 @@ public class Example {
 
     }
 
+    public void testIO() {
+        new NIOScatteringandGathering().createFiles("/tmp/tmp.txt");
+    }
+
 	/**
 	 * @param args
 	 */
@@ -718,7 +723,8 @@ public class Example {
         //e.testHttp();
         //e.testExecutors();
         //e.testCmdLineExecutor();
-        e.testString();
+        //e.testString();
+        e.testIO();
 	}
 
     public void testString() {
