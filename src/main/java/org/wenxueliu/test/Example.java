@@ -620,19 +620,6 @@ public class Example {
 		System.out.println(map.get("1").toString());
     }
 
-    public void StrTest() {
-        logger.info("----- StrTest ------");
-        String ip1 = "192.168.1.1";
-        String ip2 = "192.168.1.1/24";
-        String []ret  = ip1.split("/");
-        String []ret1  = ip2.split("/");
-        System.out.println("ret1 length:" + ret.length + ", ret1[0]:" + ret1[0] + ", ret1[1]:" + ret1[1]);
-        System.out.println("ret length :" + ret1.length + ", ret[0]:" + ret[0] + ", ret[1]");// + ret[1]);
-        short i = -1;
-        System.out.println("short " + (i & 0xFFFF));
-        System.out.println("short " + ((Short.MIN_VALUE) & 0xFFFF));
-    }
-
     //public void StatusTest(){
     //    System.out.println("------ StatusTest  --------");
     //    StatusExample1 st = new StatusExample1(StatusExample1.Process.STATUS_OPEN);
@@ -711,7 +698,6 @@ public class Example {
         //e.ThreadLocalErrorTest();
         //e.ThreadLocalPlusTest();
         //e.ClassLoaderTest();
-        //e.StrTest();
         //e.pdfboxTest();
         //e.ObjectSizeTest();
         //e.benchTest();
@@ -723,12 +709,144 @@ public class Example {
         //e.testHttp();
         //e.testExecutors();
         //e.testCmdLineExecutor();
-        //e.testString();
-        e.testIO();
+        e.testString();
+        //e.testIO();
 	}
 
     public void testString() {
-        System.out.println("get mac " + getPseudoMacAddress("10.9.1.106"));
+        logger.info("----- String Test ------");
+        String ip1 = "192.168.1.1";
+        String ip2 = "192.168.1.1/24";
+        String []ret  = ip1.split("/");
+        String []ret1  = ip2.split("/");
+        logger.info("{} ret1 length {}, ret1[0]:{}, ret1[1]:{}", new Object[] { ip1, ret.length, ret1[0], ret1[1] });
+        try {
+            logger.info("{} ret length:{}, ret[0]:{}, ret[1]:{}", new Object[]{ ip2, ret1.length, ret[0], ret[1] });
+        } catch (ArrayIndexOutOfBoundsException e) {
+            logger.info("{} ret length:{}, ret[0]:{}, ret[1]:{}", new Object[]{ ip2, ret1.length, ret[0]});
+        }
+
+        short i = -1;
+        logger.info("short -1 is {}", i & 0xFFFF);
+        logger.info("short MIN_VALUE is {}", ((Short.MIN_VALUE) & 0xFFFF));
+
+        logger.info("get mac from {} to {}", "10.9.1.106", getPseudoMacAddress("10.9.1.106"));
+
+        String addr1 = "10.1.1.1-2:1-2,10.1.2.1:1-3,10.1.3.1-3:3,10.1.4.1:1";
+        logger.info("convert {} to ", addr1);
+        for (String ip : parseAddr(addr1)) {
+            logger.info("ip : {}", ip);
+        }
+
+        String addr2 = "10.1.1.1:1,10.1.3.1-3:3";
+        logger.info("convert {} to ", addr2);
+        for (String ip : parseAddr(addr2)) {
+            logger.info("ip : {}", ip);
+        }
+
+        String addr3 = "10.1.1.1:1,10.1.3.1-3:3,";
+        logger.info("convert {} to ", addr3);
+        for (String ip : parseAddr(addr3)) {
+            logger.info("ip : {}", ip);
+        }
+    }
+
+    /**
+     * Accepts an IPv4 address and returns of string of the form xxx.xxx.xxx.xxx
+     * ie 192.168.0.1
+     *
+     * @param ipAddress
+     * @return
+     */
+    public static String fromIPv4Address(int ipAddress) {
+        StringBuffer sb = new StringBuffer();
+        int result = 0;
+        for (int i = 0; i < 4; ++i) {
+            result = (ipAddress >> ((3-i)*8)) & 0xff;
+            sb.append(Integer.valueOf(result).toString());
+            if (i != 3)
+                sb.append(".");
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Accepts an IPv4 address of the form xxx.xxx.xxx.xxx, ie 192.168.0.1 and
+     * returns the corresponding 32 bit integer.
+     * @param ipAddress
+     * @return
+     */
+    public static int toIPv4Address(String ipAddress) {
+        if (ipAddress == null)
+            throw new IllegalArgumentException("Specified IPv4 address must" +
+                "contain 4 sets of numerical digits separated by periods");
+        String[] octets = ipAddress.split("\\.");
+        if (octets.length != 4)
+            throw new IllegalArgumentException("Specified IPv4 address must" +
+                "contain 4 sets of numerical digits separated by periods");
+
+        int result = 0;
+        for (int i = 0; i < 4; ++i) {
+            int oct = Integer.valueOf(octets[i]);
+            if (oct > 255 || oct < 0)
+                throw new IllegalArgumentException("Octet values in specified" +
+                        " IPv4 address must be 0 <= value <= 255");
+            result |=  oct << ((3-i)*8);
+        }
+        return result;
+    }
+
+    /*
+     * convert "10.1.1.1-2:1-2,10.1.2.1-2:2-3" to list
+     *
+     *  10.1.1.1-1
+     *  10.1.1.1-2
+     *  10.1.1.2-1
+     *  10.1.1.2-2
+     *  10.1.2.1-2
+     *  10.1.2.1-3
+     *  10.1.2.2-2
+     *  10.1.2.2-3
+     *
+     */
+    private List<String> parseAddr(String addr) {
+        ArrayList<String> matchAddr = new ArrayList<String>();
+        if (addr.endsWith(",")) {
+            addr = addr.substring(0, addr.lastIndexOf(","));
+        }
+        String []addrList = addr.split(",");
+        for (String address : addrList) {
+            String []tmpAddr = address.split(":");
+
+            String []ip = tmpAddr[0].split("-");
+            String ipBegin = null;
+            String ipEnd = null;
+            if (ip.length == 1) {
+                ipBegin = ip[0];
+                ipEnd = ip[0];
+            } else if (ip.length == 2) {
+                ipBegin = ip[0];
+                ipEnd = ipBegin.substring(0, ipBegin.lastIndexOf(".") + 1).concat(ip[1]);
+            }
+
+            String []port = tmpAddr[1].split("-");
+            String portBegin = null;
+            String portEnd = null;
+            if (port.length == 1) {
+                portBegin = port[0];
+                portEnd = port[0];
+            } else if (port.length == 2) {
+                portBegin = port[0];
+                portEnd = port[1];
+            }
+
+            for (int intIp = toIPv4Address(ipBegin); intIp <= toIPv4Address(ipEnd); intIp++) {
+                for (int intPort = Integer.parseInt(portBegin); intPort <= Integer.parseInt(portEnd); intPort++) {
+                    matchAddr.add(new StringBuilder(fromIPv4Address(intIp)).append("-").append(intPort).toString());
+                }
+            }
+        }
+        return matchAddr;
     }
 
     public String getPseudoMacAddress(String ipStr) {
