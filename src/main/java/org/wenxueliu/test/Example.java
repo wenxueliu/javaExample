@@ -752,7 +752,7 @@ public class Example {
         }
 
         String addr4 = "10.1.1.1:*,10.1.3.1:3,";
-        logger.info("convert {} to ", addr3);
+        logger.info("convert {} to ", addr4);
         List<String> ipList = parseAddr(addr4);
         logger.info("ip size : {}", ipList.size());
         logger.info("ip[0]: {}", ipList.get(0));
@@ -761,9 +761,20 @@ public class Example {
         logger.info("ip[{}]: {}",ipList.size() - 4, ipList.get(ipList.size() - 4));
         logger.info("ip[{}]: {}",ipList.size() - 3, ipList.get(ipList.size() - 3));
         logger.info("ip[{}]: {}",ipList.size() - 2, ipList.get(ipList.size() - 2));
-        logger.info("ip[{}]: {}",ipList.size() - 2, ipList.get(ipList.size() - 1));
+        logger.info("ip[{}]: {}",ipList.size() - 1, ipList.get(ipList.size() - 1));
 
-        String addr5 = "10.1.1.1:1-2";
+        String addr5 = "10.1.1.*:1,10.1.3.1:3,";
+        logger.info("convert {} to ", addr5);
+        List<String> ipList2 = parseAddr(addr5);
+        logger.info("ip size : {}", ipList2.size());
+        logger.info("ip[0]: {}", ipList2.get(0));
+        logger.info("ip[1]: {}", ipList2.get(1));
+        logger.info("ip[2]: {}", ipList2.get(2));
+        logger.info("ip[{}]: {}",ipList2.size() - 4, ipList2.get(ipList2.size() - 4));
+        logger.info("ip[{}]: {}",ipList2.size() - 3, ipList2.get(ipList2.size() - 3));
+        logger.info("ip[{}]: {}",ipList2.size() - 2, ipList2.get(ipList2.size() - 2));
+        logger.info("ip[{}]: {}",ipList2.size() - 1, ipList2.get(ipList2.size() - 1));
+
         String ipPatern = "^((25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}:(([1-9])([0-9]){0,3})-(\\1))+$";
         logger.info("addr1 is match {}", addr1.matches(ipPatern));
         logger.info("addr2 is match {}", addr2.matches(ipPatern));
@@ -836,6 +847,19 @@ public class Example {
      *  10.1.1.2-1024
      *  ....
      *  10.1.1.2-65535
+     *
+     * convert "10.1.1.*:*" to list
+     *
+     *  10.1.1.1-1024
+     *  ....
+     *  10.1.1.1-65535
+     *  10.1.1.2-1024
+     *  ....
+     *  10.1.1.2-65535
+     *  ...
+     *  10.1.1.255-1024
+     *  ....
+     *  10.1.1.255-65535
      */
     private List<String> parseAddr(String addr) {
         ArrayList<String> matchAddr = new ArrayList<String>();
@@ -850,15 +874,22 @@ public class Example {
                 logger.warn("address {} isn't vaild, ignore it", address);
                 continue;
             }
-            String []ip = tmpAddr[0].split("-");
+
             String ipBegin = null;
             String ipEnd = null;
-            if (ip.length == 1) {
-                ipBegin = ip[0];
-                ipEnd = ip[0];
-            } else if (ip.length == 2) {
-                ipBegin = ip[0];
-                ipEnd = ipBegin.substring(0, ipBegin.lastIndexOf(".") + 1).concat(ip[1]);
+            if (tmpAddr[0].endsWith("*")) {
+                ipBegin = tmpAddr[0].substring(0, tmpAddr[0].lastIndexOf(".") + 1).concat("0");
+                ipEnd = tmpAddr[0].substring(0, tmpAddr[0].lastIndexOf(".") + 1).concat("255");
+                logger.info("ipBegin {}, ipEnd {}", ipBegin, ipEnd);
+            } else {
+                String []ip = tmpAddr[0].split("-");
+                if (ip.length == 1) {
+                    ipBegin = ip[0];
+                    ipEnd = ip[0];
+                } else if (ip.length == 2) {
+                    ipBegin = ip[0];
+                    ipEnd = ipBegin.substring(0, ipBegin.lastIndexOf(".") + 1).concat(ip[1]);
+                }
             }
 
             if (!checkIP(ipBegin, ipEnd)) {
