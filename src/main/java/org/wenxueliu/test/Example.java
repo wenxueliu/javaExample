@@ -63,6 +63,7 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
 public class Example {
 
     private static Logger logger = LoggerFactory.getLogger(Example.class);
+    private final String DELIMITER = ":";
 
     void testCmdLineExecutor() {
         CmdLineExector.test();
@@ -749,6 +750,25 @@ public class Example {
         for (String ip : parseAddr(addr3)) {
             logger.info("ip : {}", ip);
         }
+
+        String addr4 = "10.1.1.1:*,10.1.3.1:3,";
+        logger.info("convert {} to ", addr3);
+        List<String> ipList = parseAddr(addr4);
+        logger.info("ip size : {}", ipList.size());
+        logger.info("ip[0]: {}", ipList.get(0));
+        logger.info("ip[1]: {}", ipList.get(1));
+        logger.info("ip[2]: {}", ipList.get(2));
+        logger.info("ip[{}]: {}",ipList.size() - 4, ipList.get(ipList.size() - 4));
+        logger.info("ip[{}]: {}",ipList.size() - 3, ipList.get(ipList.size() - 3));
+        logger.info("ip[{}]: {}",ipList.size() - 2, ipList.get(ipList.size() - 2));
+        logger.info("ip[{}]: {}",ipList.size() - 2, ipList.get(ipList.size() - 1));
+
+        String addr5 = "10.1.1.1:1-2";
+        String ipPatern = "^((25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}:(([1-9])([0-9]){0,3})-(\\1))+$";
+        logger.info("addr1 is match {}", addr1.matches(ipPatern));
+        logger.info("addr2 is match {}", addr2.matches(ipPatern));
+        logger.info("addr3 is match {}", addr3.matches(ipPatern));
+
     }
 
     /**
@@ -808,6 +828,14 @@ public class Example {
      *  10.1.2.2-2
      *  10.1.2.2-3
      *
+     * convert "10.1.1.1-2:*" to list
+     *
+     *  10.1.1.1-1024
+     *  ....
+     *  10.1.1.1-65535
+     *  10.1.1.2-1024
+     *  ....
+     *  10.1.1.2-65535
      */
     private List<String> parseAddr(String addr) {
         ArrayList<String> matchAddr = new ArrayList<String>();
@@ -818,6 +846,10 @@ public class Example {
         for (String address : addrList) {
             String []tmpAddr = address.split(":");
 
+            if (tmpAddr.length != 2) {
+                logger.warn("address {} isn't vaild, ignore it", address);
+                continue;
+            }
             String []ip = tmpAddr[0].split("-");
             String ipBegin = null;
             String ipEnd = null;
@@ -829,24 +861,70 @@ public class Example {
                 ipEnd = ipBegin.substring(0, ipBegin.lastIndexOf(".") + 1).concat(ip[1]);
             }
 
-            String []port = tmpAddr[1].split("-");
+            if (!checkIP(ipBegin, ipEnd)) {
+                continue;
+            }
+
             String portBegin = null;
             String portEnd = null;
-            if (port.length == 1) {
-                portBegin = port[0];
-                portEnd = port[0];
-            } else if (port.length == 2) {
-                portBegin = port[0];
-                portEnd = port[1];
+            if (tmpAddr[1].equals("*")) {
+                portBegin = "1024";
+                portEnd = "65535";
+            } else {
+                String []port = tmpAddr[1].split("-");
+                if (port.length == 1) {
+                    portBegin = port[0];
+                    portEnd = port[0];
+                } else if (port.length == 2) {
+                    portBegin = port[0];
+                    portEnd = port[1];
+                }
+            }
+
+            if (!checkPort(portBegin, portEnd)) {
+                continue;
             }
 
             for (int intIp = toIPv4Address(ipBegin); intIp <= toIPv4Address(ipEnd); intIp++) {
-                for (int intPort = Integer.parseInt(portBegin); intPort <= Integer.parseInt(portEnd); intPort++) {
-                    matchAddr.add(new StringBuilder(fromIPv4Address(intIp)).append("-").append(intPort).toString());
+                int intPortBegin = Integer.parseInt(portBegin);
+                int intPortEnd = Integer.parseInt(portEnd);
+                if (intPortBegin <= intPortEnd) {
+                    for (int intPort = intPortBegin; intPort <= intPortEnd; intPort++) {
+                        matchAddr.add(new StringBuilder(fromIPv4Address(intIp)).append(DELIMITER).append(intPort).toString());
+                    }
+                } else {
+                    for (int intPort = intPortEnd; intPort <= intPortBegin; intPort++) {
+                        matchAddr.add(new StringBuilder(fromIPv4Address(intIp)).append(DELIMITER).append(intPort).toString());
+                    }
                 }
             }
         }
         return matchAddr;
+    }
+
+    private boolean checkIP(String ipBegin, String ipEnd) {
+        try {
+            if (toIPv4Address(ipBegin) > toIPv4Address(ipEnd)) {
+                logger.warn("address {} {} isn't vaild, ignore it", ipBegin, ipEnd);
+                return false;
+            }
+            return true;
+        } catch (IllegalArgumentException e) {
+            logger.error(e.getMessage());
+            return false;
+        }
+    }
+
+    private boolean checkPort(String portBegin, String portEnd) {
+        int intPortBegin = Integer.parseInt(portBegin);
+        int intPortEnd = Integer.parseInt(portEnd);
+        if (intPortBegin <= 0 || intPortBegin > 65535) {
+            return false;
+        }
+        if (intPortEnd <= 0 || intPortEnd > 65535) {
+            return false;
+        }
+        return true;
     }
 
     public String getPseudoMacAddress(String ipStr) {
