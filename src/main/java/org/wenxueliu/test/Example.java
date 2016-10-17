@@ -44,6 +44,7 @@ import org.wenxueliu.dery.DatabaseManager;
 import org.wenxueliu.http.Client;
 import org.wenxueliu.util.CmdLineExector;
 import org.wenxueliu.io.NIOScatteringandGathering;
+import org.wenxueliu.config.Resource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -710,9 +711,14 @@ public class Example {
         //e.testHttp();
         //e.testExecutors();
         //e.testCmdLineExecutor();
-        e.testString();
+        //e.testString();
         //e.testIO();
+        e.testConfig();
 	}
+
+    public void testConfig() {
+        Resource.test();
+    }
 
     public void testString() {
         logger.info("----- String Test ------");
