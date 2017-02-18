@@ -114,21 +114,26 @@
             <patternset refid="lib-cobertura"/>
     </fileset>
     </path>
+    -->
 
     <patternset id="lib-test">
-        <include name="junit-4.8.2.jar"/>
+        <include name="junit-4.12.jar"/>
+        <include name="hamcrest-core-1.3.jar"/>
+        <!--
         <include name="org.easymock-3.1.jar"/>
         <include name="objenesis-1.2.jar"/>
         <include name="cglib-nodep-2.2.2.jar"/>
+        -->
     </patternset>
     <path id="classpath-test">
-        <fileset dir="${lib}">
+        <fileset dir="${lib.dir}">
             <patternset refid="lib-test"/>
+            <!--
             <patternset refid="lib-cobertura"/>
+            -->
             <patternset refid="lib"/>
         </fileset>
     </path>
-    -->
 
     <target name="init" description="Create the output directories">
         <tstamp/>
@@ -142,10 +147,8 @@
         <mkdir dir="${build}"/>
         <mkdir dir="${target}/lib"/>
         <mkdir dir="${build-thrift}"/>
-        <!--
         <mkdir dir="${build-test}"/>
         <mkdir dir="${test-output}"/>
-        -->
     </target>
 
     <target name="gen-thrift" depends="init">
@@ -191,6 +194,15 @@
             debug="true"
             destdir="${build-thrift}">
         </javac>
+    </target>
+
+    <target name="compile-tests" depends="compile-test"/>
+    <target name="compile-test" depends="compile">
+        <javac includeAntRuntime="false" debug="true"
+           srcdir="${source-test}"
+           classpath="${build}"
+           classpathref="classpath-test"
+           destdir="${build-test}"/>
     </target>
 
     <target name="package" depends="compile" description="Creates the JAR package files">
@@ -253,6 +265,41 @@
         <delete dir="${target}"/>
     </target>
 
+    <target name="tests" depends="test"/>
+    <target name="test" depends="compile-test">
+        <junit fork="true" forkmode="once"
+           failureproperty="junit.failure"
+           printsummary="on">
+        <!--
+        <sysproperty key="net.sourceforge.cobertura.datafile"
+             file="${target}/cobertura.ser" />
+             -->
+            <classpath>
+                <!--
+                <pathelement location="${build-coverage}"/>
+                -->
+                <pathelement location="${build}"/>
+                <pathelement location="${resources}"/>
+                <pathelement location="${test-resources}"/>
+                <pathelement location="${build-test}"/>
+                <path refid="classpath-test"/>
+            </classpath>
+            <formatter type="brief" usefile="true" />
+            <batchtest todir="${test-output}">
+                <fileset dir="${source-test}">
+                    <!--
+                    <exclude name="**/storage/tests/StorageTest.java"/>
+				    <include name="**/*Test*.java"/>
+                    <exclude name="**/core/test/**"/>
+                    <exclude name="**/core/module/**"/>
+                    -->
+		        </fileset>
+            </batchtest>
+        </junit>
+        <fail if="junit.failure" message="Unit test(s) failed.  See reports!"/>
+    </target>
+
+
     <target name="thrift-server" description="run thrift server">
         <java fork="true" jar="${thrift-server.jar}" classpathref="thrift.classpath">
             <jvmarg value="-server"/>
@@ -297,7 +344,7 @@
 
 
     <target name="exec" description="Running programs under Ant">
-        <property name="logback.configurationFile" value="./logback.xml" />
+        <property name="logback.configurationFile" value="./etc/logback.xml" />
         <java fork="true" jar="${learnJava-jar}" classpathref="classpath">
             <jvmarg value="-server"/>
             <jvmarg value="-Xms1024M"/>

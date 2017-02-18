@@ -1,4 +1,5 @@
 package org.wenxueliu.test;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -10,9 +11,7 @@ import java.util.Iterator;
 import java.util.UUID;
 import java.util.Map;
 import java.lang.IndexOutOfBoundsException;
-import java.lang.Exception;
-import java.lang.ref.WeakReference;
-import java.util.concurrent.TimeUnit;
+import java.lang.Exception; import java.lang.ref.WeakReference; import java.util.concurrent.TimeUnit;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
@@ -45,6 +44,7 @@ import org.wenxueliu.http.Client;
 import org.wenxueliu.util.CmdLineExector;
 import org.wenxueliu.io.NIOScatteringandGathering;
 import org.wenxueliu.config.Resource;
+import org.wenxueliu.log.LogConfig;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -714,7 +714,22 @@ public class Example {
         //e.testString();
         //e.testIO();
         e.testConfig();
+        e.testSystemProperty();
+        e.testReloadLog();
+        e.testSystemProperty();
 	}
+
+    public void testSystemProperty() {
+        String logPath = System.getProperty("logback.configurationFile");
+        logger.info("log config dir: {}", logPath);
+        File f = new File(logPath);
+        logger.debug("log is exist {} isFile {}", f.exists(), f.isFile());
+        logger.debug("log canWrite {} getAbsolutePath {}", f.canWrite(), f.getAbsolutePath());
+    }
+
+    public void testReloadLog() {
+        LogConfig.testReloadLog();
+    }
 
     public void testConfig() {
         Resource.test();
