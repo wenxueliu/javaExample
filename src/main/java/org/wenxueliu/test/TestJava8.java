@@ -1,4 +1,4 @@
-package org.wenxueliu.test;
+//package org.wenxueliu.test;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -11,6 +11,7 @@ import java.util.Comparator;
 import java.util.function.Function;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 class TestJava8 {
 
@@ -80,13 +81,51 @@ class TestJava8 {
         Predicate isNotEmpty = isEmpty.negate();
     }
 
-    static void testOptinal() {
-        Optional<String> optional = Optional.of("bam");
-        optional.isPresent();           // true
-        optional.get();                 // "bam"
-        optional.orElse("fallback");    // "bam"
-        optional.ifPresent((s) -> System.out.println(s.charAt(0)));
+    static String returnNull() {
+        return null;
     }
+
+    static String returnNoNull() {
+        return "123";
+    }
+
+    static void testOptinal() {
+        Optional<String> optional = Optional.of(returnNoNull());
+        System.out.println(optional.isPresent());           // true
+        System.out.println(optional.get());                 // "bam"
+        System.out.println(optional.orElse("fallback"));    // "bam"
+        optional.ifPresent((s) -> System.out.println(s.charAt(0)));
+
+        optional = Optional.ofNullable(returnNull());
+        System.out.println(optional.isPresent());           // true
+        System.out.println(optional.orElse("bam"));                 // "bam"
+        System.out.println(optional.orElse("fallback"));    // "bam"
+        optional.ifPresent((s) -> System.out.println(s.charAt(0)));
+
+        Stream<String> names = Stream.of("Lamurudu", "Okanbi", "Oduduwa");
+        Optional<String> longest = names
+                                .filter(name -> name.startsWith("L"))
+                                .findFirst();
+        longest.ifPresent(name -> {
+                String s = name.toUpperCase();
+                System.out.println("The longest name is "+ s);
+            });
+
+        Optional<String> lNameInCaps = longest.map(String::toUpperCase);
+
+        String alternate = longest.orElse("Nimrod");
+        System.out.println(alternate); //prints out "Nimrod"
+
+        String alternate1 = longest.orElseGet(() -> {
+            // perform some interesting code operation
+            // then return the alternate value.
+            return "Nimrod";
+        });
+        System.out.println(alternate1); //prints out "Nimrod"
+
+        longest.orElseThrow(NullPointerException::new);
+    }
+
 
     static void testStream() {
         List<String> stringCollection = new ArrayList<String>();
@@ -182,13 +221,13 @@ class TestJava8 {
 
     static public void main(String []args) {
         System.out.println("hello");
-        TestJava8.testLambda();
-        TestJava8.testFunction();
-        TestJava8.testPredicate();
+        //TestJava8.testLambda();
+        //TestJava8.testFunction();
+        //TestJava8.testPredicate();
         TestJava8.testOptinal();
-        TestJava8.testParaStream();
-        TestJava8 t = new TestJava8();
-        t.testScopes();
+        //TestJava8.testParaStream();
+        //TestJava8 t = new TestJava8();
+        //t.testScopes();
     }
 
 
