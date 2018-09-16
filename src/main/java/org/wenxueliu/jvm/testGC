@@ -1,0 +1,229 @@
+#!/bin/bash
+
+set -x
+javac MinorGC.java
+
+#1. testAllocation
+
+echo "对象优先在 Enden 分配"
+allocType="alloc"
+java -verbose:gc -Xms20M -Xmx20M -Xmn10M \
+    -XX:+PrintGCDetails \
+    -XX:SurvivorRatio=8 \
+    -XX:+UseSerial \
+    MinorGC $allocType
+java -verbose:gc -Xms20M -Xmx20M -Xmn10M \
+    -XX:+PrintGCDetails \
+    -XX:SurvivorRatio=8 \
+    -XX:+UseParallelGC \
+    MinorGC $allocType
+java -verbose:gc -Xms20M -Xmx20M -Xmn10M \
+    -XX:+PrintGCDetails \
+    -XX:SurvivorRatio=8 \
+    -XX:+UseParallelOldGC \
+    MinorGC $allocType
+java -verbose:gc -Xms20M -Xmx20M -Xmn10M \
+    -XX:+PrintGCDetails \
+    -XX:SurvivorRatio=8 \
+    -XX:+UseConcMarkSweepGC \
+    MinorGC $allocType
+
+#2. testPretenureSizeThreshold
+
+echo "大对象直接进入老年代"
+allocType="pretenureSizeThreshold"
+
+java -verbose:gc -Xms20M -Xmx20M -Xmn10M \
+        -XX:+PrintGCDetails \
+        -XX:SurvivorRatio=8 \
+        -XX:PretenureSizeThreshold=3145728 \
+        -XX:+UseSerial \
+        MinorGC $allocType
+
+java -verbose:gc -Xms20M -Xmx20M -Xmn10M \
+        -XX:+PrintGCDetails \
+        -XX:SurvivorRatio=8 \
+        -XX:PretenureSizeThreshold=3145728 \
+        -XX:+UseParallelGC \
+        MinorGC $allocType
+
+java -verbose:gc -Xms20M -Xmx20M -Xmn10M \
+        -XX:+PrintGCDetails \
+        -XX:SurvivorRatio=8 \
+        -XX:PretenureSizeThreshold=3145728 \
+        -XX:+UseParallelOldGC \
+        MinorGC $allocType
+java -verbose:gc -Xms20M -Xmx20M -Xmn10M \
+        -XX:+PrintGCDetails \
+        -XX:SurvivorRatio=8 \
+        -XX:PretenureSizeThreshold=3145728 \
+        -XX:+UseConcMarkSweepGC \
+        MinorGC $allocType
+
+##testTenuringThreshold
+
+echo "长期存活对象进入老年代"
+allocType="tenuringThreshold"
+
+java -verbose:gc -Xms20M -Xmx20M -Xmn10M \
+        -XX:+PrintGCDetails \
+        -XX:SurvivorRatio=8 \
+        -XX:MaxTenuringThreshold=1 \
+        -XX:+UseSerial \
+        MinorGC $allocType
+
+java -verbose:gc -Xms20M -Xmx20M -Xmn10M \
+        -XX:+PrintGCDetails \
+        -XX:SurvivorRatio=8 \
+        -XX:MaxTenuringThreshold=1 \
+        -XX:+UseParallelGC \
+        MinorGC $allocType
+
+java -verbose:gc -Xms20M -Xmx20M -Xmn10M \
+        -XX:+PrintGCDetails \
+        -XX:SurvivorRatio=8 \
+        -XX:MaxTenuringThreshold=1 \
+        -XX:+UseParallelOldGC \
+        MinorGC $allocType
+
+java -verbose:gc -Xms20M -Xmx20M -Xmn10M \
+        -XX:+PrintGCDetails \
+        -XX:SurvivorRatio=8 \
+        -XX:MaxTenuringThreshold=1 \
+        -XX:+UseConcMarkSweepGC \
+        MinorGC $allocType
+
+java -verbose:gc -Xms20M -Xmx20M -Xmn10M \
+        -XX:+PrintGCDetails \
+        -XX:SurvivorRatio=8 \
+        -XX:MaxTenuringThreshold=15 \
+        -XX:+UseSerial \
+        MinorGC $allocType
+
+java -verbose:gc -Xms20M -Xmx20M -Xmn10M \
+        -XX:+PrintGCDetails \
+        -XX:SurvivorRatio=8 \
+        -XX:MaxTenuringThreshold=15 \
+        -XX:+UseParallelGC \
+        MinorGC $allocType
+
+java -verbose:gc -Xms20M -Xmx20M -Xmn10M \
+        -XX:+PrintGCDetails \
+        -XX:SurvivorRatio=8 \
+        -XX:MaxTenuringThreshold=15 \
+        -XX:+UseParallelOldGC \
+        MinorGC $allocType
+
+java -verbose:gc -Xms20M -Xmx20M -Xmn10M \
+        -XX:+PrintGCDetails \
+        -XX:SurvivorRatio=8 \
+        -XX:MaxTenuringThreshold=15 \
+        -XX:+UseConcMarkSweepGC \
+        MinorGC $allocType
+
+
+##testTenuringThreshold2
+
+echo "动态对象年龄判定"
+allocType="tenuringThreshold2"
+
+java -verbose:gc -Xms20M -Xmx20M -Xmn10M \
+        -XX:+PrintGCDetails \
+        -XX:SurvivorRatio=8 \
+        -XX:MaxTenuringThreshold=15 \
+        -XX:+PrintTenuringDistribution \
+        -XX:+UseSerial \
+        MinorGC $allocType
+
+java -verbose:gc -Xms20M -Xmx20M -Xmn10M \
+        -XX:+PrintGCDetails \
+        -XX:SurvivorRatio=8 \
+        -XX:MaxTenuringThreshold=15 \
+        -XX:+PrintTenuringDistribution \
+        -XX:+UseParallelGC \
+        MinorGC $allocType
+
+java -verbose:gc -Xms20M -Xmx20M -Xmn10M \
+        -XX:+PrintGCDetails \
+        -XX:SurvivorRatio=8 \
+        -XX:MaxTenuringThreshold=15 \
+        -XX:+PrintTenuringDistribution \
+        -XX:+UseParallelOldGC \
+        MinorGC $allocType
+
+java -verbose:gc -Xms20M -Xmx20M -Xmn10M \
+        -XX:+PrintGCDetails \
+        -XX:SurvivorRatio=8 \
+        -XX:MaxTenuringThreshold=15 \
+        -XX:+PrintTenuringDistribution \
+        -XX:+UseConcMarkSweepGC \
+        MinorGC $allocType
+
+
+##testHandlePromotion
+
+echo "动态对象年龄判定"
+allocType="handlePromotion"
+
+java -verbose:gc -Xms20M -Xmx20M -Xmn10M \
+        -XX:+PrintGCDetails \
+        -XX:SurvivorRatio=8 \
+        -XX:-HandlePromotion
+        -XX:+UseSerial \
+        MinorGC $allocType
+
+java -verbose:gc -Xms20M -Xmx20M -Xmn10M \
+        -XX:+PrintGCDetails \
+        -XX:SurvivorRatio=8 \
+        -XX:-HandlePromotion
+        -XX:+UseParallelGC \
+        MinorGC $allocType
+
+java -verbose:gc -Xms20M -Xmx20M -Xmn10M \
+        -XX:+PrintGCDetails \
+        -XX:SurvivorRatio=8 \
+        -XX:-HandlePromotion
+        -XX:+UseParallelOldGC \
+        MinorGC $allocType
+
+java -verbose:gc -Xms20M -Xmx20M -Xmn10M \
+        -XX:+PrintGCDetails \
+        -XX:SurvivorRatio=8 \
+        -XX:-HandlePromotion
+        -XX:+UseConcMarkSweepGC \
+        MinorGC $allocType
+
+java -verbose:gc -Xms20M -Xmx20M -Xmn10M \
+        -XX:+PrintGCDetails \
+        -XX:SurvivorRatio=8 \
+        -XX:+HandlePromotion
+        -XX:+UseSerial \
+        MinorGC $allocType
+
+java -verbose:gc -Xms20M -Xmx20M -Xmn10M \
+        -XX:+PrintGCDetails \
+        -XX:SurvivorRatio=8 \
+        -XX:+HandlePromotion
+        -XX:+UseParallelGC \
+        MinorGC $allocType
+
+java -verbose:gc -Xms20M -Xmx20M -Xmn10M \
+        -XX:+PrintGCDetails \
+        -XX:SurvivorRatio=8 \
+        -XX:+HandlePromotion
+        -XX:+UseParallelOldGC \
+        MinorGC $allocType
+
+java -verbose:gc -Xms20M -Xmx20M -Xmn10M \
+        -XX:+PrintGCDetails \
+        -XX:SurvivorRatio=8 \
+        -XX:+HandlePromotion
+        -XX:+UseConcMarkSweepGC \
+        MinorGC $allocType
+
+#编译优化
+
+javac Optimal.java
+
+java -XX:+UnlockDiagnosticVMOptions -XX:+PrintCompilation -XX:+PrintInlining Optimal
+#-XX:+PrintOptoAssembly Optimal 需要 debug 版本
