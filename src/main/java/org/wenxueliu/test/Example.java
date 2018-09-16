@@ -10,6 +10,10 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.UUID;
 import java.util.Map;
+import java.io.IOException;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.lang.IndexOutOfBoundsException;
 import java.lang.Exception; import java.lang.ref.WeakReference; import java.util.concurrent.TimeUnit;
 import java.net.InetAddress;
@@ -713,10 +717,14 @@ public class Example {
         //e.testCmdLineExecutor();
         //e.testString();
         //e.testIO();
-        e.testConfig();
-        e.testSystemProperty();
-        e.testReloadLog();
-        e.testSystemProperty();
+        //e.testConfig();
+        //e.testSystemProperty();
+        //e.testReloadLog();
+        //e.testSystemProperty();
+        long begin = System.currentTimeMillis();
+        e.lightWeightCmd("ls");
+        long end = System.currentTimeMillis();
+        System.out.println("take time" + (end - begin));
 	}
 
     public void testSystemProperty() {
@@ -1313,4 +1321,41 @@ public class Example {
         //return InetAddress.getByAddress(unpack(packedBytes)).getHostAddress();
         return InetAddress.getByName(String.valueOf(packedBytes)).getHostAddress();
     }
+
+    public void lightWeightCmd(String cmdStr) {
+        for (int i = 0; i < 10000; i++) {
+            ProcessBuilder processBuilder = new ProcessBuilder();
+            Process process = null;
+            StringBuilder output = new StringBuilder(10);
+            processBuilder.command("/bin/bash", "-c", cmdStr);
+            //logger.debug("execute {} {}", "/bin/bash -c ", cmdStr);
+            processBuilder.redirectErrorStream(true);
+            try {
+                process = processBuilder.start();
+                byte[] bytes = new byte[10];
+                BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                String line ;
+                while ((line = br.readLine()) != null) {
+                    output.append(line);
+                }
+                process.waitFor();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            if (process != null) {
+                int exitValue = process.exitValue();
+                if (exitValue != 0) {
+                    logger.error("execute {} with error {}", cmdStr, output);
+                } else {
+                    //if (logger.isDebugEnabled()) {
+                    //    logger.debug("execute {} with output {}", cmdStr, output);
+                    //}
+                }
+            }
+        }
+    }
+
 }
